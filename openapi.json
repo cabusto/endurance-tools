@@ -1,0 +1,2294 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Endurance API",
+    "description": "Calculations for running, cycling, swimming, and triathlon.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/age-grade/calculate": {
+      "post": {
+        "tags": [
+          "Age Grading"
+        ],
+        "summary": "Calculate age-graded performance",
+        "description": "Calculate age-graded performance using WMA 2023 factors.\n\nAge grade % = (open_standard / actual_time) * age_factor * 100\n\nReturns the percentage and the equivalent open-class time.",
+        "operationId": "calculate_age_grade_age_grade_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgeGradeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgeGradeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/age-grade/factors": {
+      "get": {
+        "tags": [
+          "Age Grading"
+        ],
+        "summary": "Get available WMA factors",
+        "description": "Return WMA age-grade factors for a distance.",
+        "operationId": "get_factors_age_grade_factors_get",
+        "parameters": [
+          {
+            "name": "distance_m",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Distance in meters",
+              "title": "Distance M"
+            },
+            "description": "Distance in meters"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vdot/calculate": {
+      "post": {
+        "tags": [
+          "VDOT"
+        ],
+        "summary": "Calculate VDOT from race performance",
+        "description": "Calculate VDOT from a race time using Jack Daniels' formula.\n\nVDOT = (VO2max * 100) / (percent_max * oxygen_cost)\nSimplified: VDOT \u2248 (velocity_mps * 60 * 1000) / (3.5 + distance_factor)",
+        "operationId": "calculate_vdot_vdot_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VDOTRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VDOTResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vdot/paces": {
+      "get": {
+        "tags": [
+          "VDOT"
+        ],
+        "summary": "Get training paces for a VDOT",
+        "description": "Return training paces (sec/km) for a given VDOT.",
+        "operationId": "get_paces_vdot_paces_get",
+        "parameters": [
+          {
+            "name": "vdot",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 85,
+              "minimum": 30,
+              "title": "Vdot"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vdot/race-times": {
+      "get": {
+        "tags": [
+          "VDOT"
+        ],
+        "summary": "Predict race times for a VDOT",
+        "description": "Predict race times for common distances at a given VDOT.",
+        "operationId": "predict_times_vdot_race_times_get",
+        "parameters": [
+          {
+            "name": "vdot",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 85,
+              "minimum": 30,
+              "title": "Vdot"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cat-ranking/calculate": {
+      "post": {
+        "tags": [
+          "Cycling Category"
+        ],
+        "summary": "Calculate cycling category from FTP",
+        "description": "Determine cycling category from FTP w/kg.\n\nSystems:\n- usac: USA Cycling categories (sex-specific)\n- zwift: Zwift racing categories (A-D)\n- zwift-ce: Zwift Category Enforcement (A+ through E)",
+        "operationId": "calculate_category_cat_ranking_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatRankingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatRankingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cat-ranking/thresholds": {
+      "get": {
+        "tags": [
+          "Cycling Category"
+        ],
+        "summary": "Get category thresholds for a system",
+        "description": "Return all category thresholds for a system.",
+        "operationId": "get_thresholds_cat_ranking_thresholds_get",
+        "parameters": [
+          {
+            "name": "system",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(usac|zwift|zwift-ce)$",
+              "default": "usac",
+              "title": "System"
+            }
+          },
+          {
+            "name": "sex",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[MF]$",
+              "default": "M",
+              "title": "Sex"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fina/calculate": {
+      "post": {
+        "tags": [
+          "FINA Points"
+        ],
+        "summary": "Calculate FINA points from swim time",
+        "description": "Calculate FINA points using the cubic formula:\n\nPoints = 1000 * (base_time / time)^3\n\nBase times are the 2024 FINA 1000-point standards.",
+        "operationId": "calculate_fina_fina_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fina/base-times": {
+      "get": {
+        "tags": [
+          "FINA Points"
+        ],
+        "summary": "Get FINA base times (1000-point standards)",
+        "description": "Return all base times for a sex.",
+        "operationId": "get_base_times_fina_base_times_get",
+        "parameters": [
+          {
+            "name": "sex",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[MF]$",
+              "default": "M",
+              "title": "Sex"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fina/events": {
+      "get": {
+        "tags": [
+          "FINA Points"
+        ],
+        "summary": "List supported events",
+        "description": "List all supported swimming events.",
+        "operationId": "list_events_fina_events_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/critical-power/calculate": {
+      "post": {
+        "tags": [
+          "Critical Power"
+        ],
+        "summary": "Calculate CP and W' from max efforts",
+        "description": "Calculate Critical Power (CP) and W' using linear regression:\n\nWork = CP * time + W'\npower * time = CP * time + W'\npower = CP + W' / time\n\nUses 2+ maximal efforts of different durations (typically 2-20 min).",
+        "operationId": "calculate_cp_critical_power_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriticalPowerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CriticalPowerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/critical-power/predict": {
+      "get": {
+        "tags": [
+          "Critical Power"
+        ],
+        "summary": "Predict power for a duration given CP/W'",
+        "description": "Predict sustainable power for a given duration.",
+        "operationId": "predict_power_critical_power_predict_get",
+        "parameters": [
+          {
+            "name": "cp",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "title": "Cp"
+            }
+          },
+          {
+            "name": "w_prime",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "title": "W Prime"
+            }
+          },
+          {
+            "name": "duration_sec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "title": "Duration Sec"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/riegel/predict": {
+      "post": {
+        "tags": [
+          "Race Prediction"
+        ],
+        "summary": "Predict race time using Riegel formula",
+        "description": "Riegel formula: T2 = T1 * (D2/D1)^exponent\n\nDefault exponent 1.06 works well for running. \nCycling ~1.05, Swimming ~1.10.",
+        "operationId": "predict_riegel_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiegelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiegelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/riegel/common": {
+      "get": {
+        "tags": [
+          "Race Prediction"
+        ],
+        "summary": "Predict common race distances from one time",
+        "description": "Predict 5k, 10k, half, marathon from any known distance.",
+        "operationId": "common_distances_riegel_common_get",
+        "parameters": [
+          {
+            "name": "distance_m",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Distance M"
+            }
+          },
+          {
+            "name": "time_sec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Time Sec"
+            }
+          },
+          {
+            "name": "exponent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 1.06,
+              "title": "Exponent"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purdy/calculate": {
+      "post": {
+        "tags": [
+          "Purdy Points"
+        ],
+        "summary": "Calculate Purdy points",
+        "description": "Calculate Purdy points by linear interpolation in the table.\n\nPurdy points are an older running scoring system, similar to age grading\nbut without age/sex adjustment.",
+        "operationId": "calculate_purdy_purdy_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurdyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurdyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tss/tss": {
+      "post": {
+        "tags": [
+          "Training Stress"
+        ],
+        "summary": "Calculate TSS from power data",
+        "description": "TSS = (duration_hr * NP * IF) / (FTP * 3600) * 100\nwhere IF = NP / FTP\n\nSimplifies to: TSS = duration_hr * IF^2 * 100",
+        "operationId": "calculate_tss_tss_tss_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TSSRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TSSResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tss/trimp": {
+      "post": {
+        "tags": [
+          "Training Stress"
+        ],
+        "summary": "Calculate TRIMP from HR data",
+        "description": "TRIMP (Training Impulse) - Banister's method:\n\nTRIMP = duration_min * HRR_fraction * exp(1.92 * HRR_fraction) for men\nTRIMP = duration_min * HRR_fraction * exp(1.67 * HRR_fraction) for women\n\nwhere HRR_fraction = (avg_hr - resting_hr) / (max_hr - resting_hr)",
+        "operationId": "calculate_trimp_tss_trimp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrimpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrimpResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hr-zones/calculate": {
+      "post": {
+        "tags": [
+          "Heart Rate Zones"
+        ],
+        "summary": "Calculate HR zones",
+        "description": "Calculate heart rate zones for various systems.\n\nSystems:\n- coggan: Andy Coggan 7-zone (default)\n- british: British Cycling 6-zone\n- garmin: Garmin 5-zone\n- karvonen: Karvonen (%HRR) - requires resting_hr",
+        "operationId": "calculate_zones_hr_zones_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HRZonesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HRZonesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hr-zones/systems": {
+      "get": {
+        "tags": [
+          "Heart Rate Zones"
+        ],
+        "summary": "List available zone systems",
+        "operationId": "list_systems_hr_zones_systems_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pace/convert": {
+      "post": {
+        "tags": [
+          "Pace Conversion"
+        ],
+        "summary": "Convert between pace/speed units",
+        "description": "Convert between pace and speed units.\n\nSupported units:\n- min_per_km: minutes per kilometer (running)\n- min_per_mi: minutes per mile (running)\n- kmh: kilometers per hour (cycling)\n- mph: miles per hour (cycling)\n- sec_per_100m: seconds per 100m (swimming)\n- sec_per_100y: seconds per 100 yards (swimming SCY)",
+        "operationId": "convert_pace_convert_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaceConvertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaceConvertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pace/swim-convert": {
+      "get": {
+        "tags": [
+          "Pace Conversion"
+        ],
+        "summary": "Convert swim paces between pool types",
+        "description": "Convert swim pace between pool types.\n\nSCM = short course meters (25m)\nLCM = long course meters (50m)\nSCY = short course yards (25y)\n\nUses standard conversion factors.",
+        "operationId": "swim_convert_pace_swim_convert_get",
+        "parameters": [
+          {
+            "name": "pace_sec_per_100",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "title": "Pace Sec Per 100"
+            }
+          },
+          {
+            "name": "from_pool",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(scm|lcm|scy)$",
+              "title": "From Pool"
+            }
+          },
+          {
+            "name": "to_pool",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(scm|lcm|scy)$",
+              "title": "To Pool"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/altitude/adjust": {
+      "post": {
+        "tags": [
+          "Altitude Adjustment"
+        ],
+        "summary": "Adjust performance for altitude",
+        "description": "Apply altitude derating.\n\nBased on published physiology data:\n- VO2max: ~4.5%/1000m above 1500m\n- Power (cycling): ~3.5%/1000m above 1500m  \n- Running pace: ~1.5%/1000m (slower)",
+        "operationId": "adjust_altitude_adjust_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AltitudeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AltitudeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/altitude/acclimation": {
+      "get": {
+        "tags": [
+          "Altitude Adjustment"
+        ],
+        "summary": "Estimate acclimation timeline",
+        "description": "Estimate days to acclimate to altitude.\n\nRough guideline: 11-14 days per 1000m for full acclimation.",
+        "operationId": "acclimation_altitude_acclimation_get",
+        "parameters": [
+          {
+            "name": "altitude_m",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "title": "Altitude M"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/heat/adjust": {
+      "post": {
+        "tags": [
+          "Heat Adjustment"
+        ],
+        "summary": "Adjust performance for heat",
+        "description": "Adjust pace/power for heat using WBGT approximation.\n\nWBGT \u2248 0.7 * Twb + 0.2 * Tglobe + 0.1 * Tair\nSimplified: WBGT \u2248 Tair * (0.5 + 0.5 * humidity/100) for still air\n\nDerating (ACSMM/IOC guidelines):\n- WBGT < 10\u00b0C: minimal impact\n- WBGT 10-18\u00b0C: ~1-3% pace slowdown\n- WBGT 18-28\u00b0C: ~3-7% slowdown\n- WBGT > 28\u00b0C: high risk, >10% slowdown",
+        "operationId": "adjust_heat_adjust_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/heat/guidelines": {
+      "get": {
+        "tags": [
+          "Heat Adjustment"
+        ],
+        "summary": "Heat risk guidelines",
+        "operationId": "guidelines_heat_guidelines_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swim-css/calculate": {
+      "post": {
+        "tags": [
+          "Swim CSS"
+        ],
+        "summary": "Calculate CSS from 400/200 TT",
+        "description": "Critical Swim Speed (CSS) from two time trials:\n\nCSS (m/s) = (400 - 200) / (time_400 - time_200)\nCSS per 100m = 100 / CSS_mps\n\nThreshold pace \u2248 CSS + 1-2 sec/100m",
+        "operationId": "calculate_css_swim_css_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwimCSSRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwimCSSResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swim-css/training-zones": {
+      "get": {
+        "tags": [
+          "Swim CSS"
+        ],
+        "summary": "Get swim training zones from CSS",
+        "description": "Return swim training zones based on CSS.",
+        "operationId": "training_zones_swim_css_training_zones_get",
+        "parameters": [
+          {
+            "name": "css_sec_per_100",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "title": "Css Sec Per 100"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bike-fit/calculate": {
+      "post": {
+        "tags": [
+          "Bike Fit"
+        ],
+        "summary": "Calculate bike fit from anthropometrics",
+        "description": "Calculate bike fit measurements from body dimensions.\n\nBased on common fit systems (Lemond, Greg LeMond, BikeFit, etc.)\nThese are starting points - professional fit recommended.",
+        "operationId": "calculate_fit_bike_fit_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BikeFitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BikeFitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bike-fit/crank-length": {
+      "get": {
+        "tags": [
+          "Bike Fit"
+        ],
+        "summary": "Crank length recommendations by inseam",
+        "description": "Crank length suggestions based on inseam.",
+        "operationId": "crank_length_bike_fit_crank_length_get",
+        "parameters": [
+          {
+            "name": "inseam_cm",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "title": "Inseam Cm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgeGradeRequest": {
+        "properties": {
+          "distance_m": {
+            "type": "integer",
+            "minimum": 100.0,
+            "title": "Distance M",
+            "description": "Race distance in meters"
+          },
+          "time_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Time Seconds",
+            "description": "Finish time in seconds"
+          },
+          "age": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 10.0,
+            "title": "Age",
+            "description": "Athlete age"
+          },
+          "sex": {
+            "type": "string",
+            "pattern": "^[MF]$",
+            "title": "Sex",
+            "description": "Sex: M or F",
+            "default": "M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "distance_m",
+          "time_seconds",
+          "age"
+        ],
+        "title": "AgeGradeRequest"
+      },
+      "AgeGradeResponse": {
+        "properties": {
+          "age_grade_pct": {
+            "type": "number",
+            "title": "Age Grade Pct",
+            "description": "Age-graded performance percentage"
+          },
+          "age_grade_time": {
+            "type": "number",
+            "title": "Age Grade Time",
+            "description": "Equivalent open-class time (seconds)"
+          },
+          "factor_used": {
+            "type": "number",
+            "title": "Factor Used",
+            "description": "WMA factor applied"
+          },
+          "open_standard": {
+            "type": "number",
+            "title": "Open Standard",
+            "description": "Open class standard (seconds)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "age_grade_pct",
+          "age_grade_time",
+          "factor_used",
+          "open_standard"
+        ],
+        "title": "AgeGradeResponse"
+      },
+      "AltitudeRequest": {
+        "properties": {
+          "altitude_m": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Altitude M",
+            "description": "Altitude in meters"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "description": "Metric to adjust: vo2max, power, pace",
+            "default": "vo2max"
+          },
+          "sea_level_value": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sea Level Value",
+            "description": "Value at sea level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "altitude_m",
+          "sea_level_value"
+        ],
+        "title": "AltitudeRequest"
+      },
+      "AltitudeResponse": {
+        "properties": {
+          "adjusted_value": {
+            "type": "number",
+            "title": "Adjusted Value"
+          },
+          "altitude_m": {
+            "type": "number",
+            "title": "Altitude M"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          }
+        },
+        "type": "object",
+        "required": [
+          "adjusted_value",
+          "altitude_m",
+          "factor",
+          "metric"
+        ],
+        "title": "AltitudeResponse"
+      },
+      "BikeFitRequest": {
+        "properties": {
+          "height_cm": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Height Cm",
+            "description": "Rider height in cm"
+          },
+          "inseam_cm": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Inseam Cm",
+            "description": "Inseam in cm"
+          },
+          "gender": {
+            "type": "string",
+            "pattern": "^[MF]$",
+            "title": "Gender",
+            "description": "Gender: M or F",
+            "default": "M"
+          },
+          "style": {
+            "type": "string",
+            "title": "Style",
+            "description": "Bike style: road, tt, mtb, gravel",
+            "default": "road"
+          }
+        },
+        "type": "object",
+        "required": [
+          "height_cm",
+          "inseam_cm"
+        ],
+        "title": "BikeFitRequest"
+      },
+      "BikeFitResponse": {
+        "properties": {
+          "saddle_height_mm": {
+            "type": "number",
+            "title": "Saddle Height Mm"
+          },
+          "saddle_setback_mm": {
+            "type": "number",
+            "title": "Saddle Setback Mm"
+          },
+          "reach_mm": {
+            "type": "number",
+            "title": "Reach Mm"
+          },
+          "stack_mm": {
+            "type": "number",
+            "title": "Stack Mm"
+          },
+          "handlebar_drop_mm": {
+            "type": "number",
+            "title": "Handlebar Drop Mm"
+          },
+          "crank_length_mm": {
+            "type": "number",
+            "title": "Crank Length Mm"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "saddle_height_mm",
+          "saddle_setback_mm",
+          "reach_mm",
+          "stack_mm",
+          "handlebar_drop_mm",
+          "crank_length_mm",
+          "notes"
+        ],
+        "title": "BikeFitResponse"
+      },
+      "CatRankingRequest": {
+        "properties": {
+          "ftp_watts": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Ftp Watts",
+            "description": "FTP in watts"
+          },
+          "weight_kg": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Weight Kg",
+            "description": "Body weight in kg"
+          },
+          "sex": {
+            "type": "string",
+            "pattern": "^[MF]$",
+            "title": "Sex",
+            "description": "Sex: M or F",
+            "default": "M"
+          },
+          "system": {
+            "type": "string",
+            "title": "System",
+            "description": "Ranking system: usac, zwift, zwift-ce",
+            "default": "usac"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ftp_watts",
+          "weight_kg"
+        ],
+        "title": "CatRankingRequest"
+      },
+      "CatRankingResponse": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Assigned category"
+          },
+          "ftp_wkg": {
+            "type": "number",
+            "title": "Ftp Wkg",
+            "description": "FTP in watts/kg"
+          },
+          "thresholds": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Thresholds",
+            "description": "All thresholds for reference"
+          },
+          "next_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Category",
+            "description": "Next category up"
+          },
+          "watts_to_next": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Watts To Next",
+            "description": "Watts needed for next category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "ftp_wkg",
+          "thresholds"
+        ],
+        "title": "CatRankingResponse"
+      },
+      "CriticalPowerRequest": {
+        "properties": {
+          "efforts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Efforts",
+            "description": "List of {duration_sec, power_watts} for 2+ max efforts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "efforts"
+        ],
+        "title": "CriticalPowerRequest"
+      },
+      "CriticalPowerResponse": {
+        "properties": {
+          "cp": {
+            "type": "number",
+            "title": "Cp",
+            "description": "Critical Power (watts)"
+          },
+          "w_prime": {
+            "type": "number",
+            "title": "W Prime",
+            "description": "W' (joules)"
+          },
+          "r_squared": {
+            "type": "number",
+            "title": "R Squared",
+            "description": "Fit quality"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cp",
+          "w_prime",
+          "r_squared"
+        ],
+        "title": "CriticalPowerResponse"
+      },
+      "FinaRequest": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "title": "Event",
+            "description": "Event key (e.g., 100_free, 200_fly)"
+          },
+          "time_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Time Seconds",
+            "description": "Swim time in seconds"
+          },
+          "sex": {
+            "type": "string",
+            "pattern": "^[MF]$",
+            "title": "Sex",
+            "description": "Sex: M or F",
+            "default": "M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event",
+          "time_seconds"
+        ],
+        "title": "FinaRequest"
+      },
+      "FinaResponse": {
+        "properties": {
+          "points": {
+            "type": "integer",
+            "title": "Points",
+            "description": "FINA points"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "sex": {
+            "type": "string",
+            "title": "Sex"
+          },
+          "base_time": {
+            "type": "number",
+            "title": "Base Time"
+          },
+          "time_seconds": {
+            "type": "number",
+            "title": "Time Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points",
+          "event",
+          "sex",
+          "base_time",
+          "time_seconds"
+        ],
+        "title": "FinaResponse"
+      },
+      "HRZone": {
+        "properties": {
+          "zone": {
+            "type": "integer",
+            "title": "Zone"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "min_bpm": {
+            "type": "number",
+            "title": "Min Bpm"
+          },
+          "max_bpm": {
+            "type": "number",
+            "title": "Max Bpm"
+          },
+          "pct_max": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Max"
+          },
+          "pct_hrr": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Hrr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "zone",
+          "name",
+          "min_bpm",
+          "max_bpm"
+        ],
+        "title": "HRZone"
+      },
+      "HRZonesRequest": {
+        "properties": {
+          "max_hr": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Max Hr",
+            "description": "Max heart rate (bpm)"
+          },
+          "resting_hr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resting Hr",
+            "description": "Resting HR (bpm) - needed for Karvonen"
+          },
+          "system": {
+            "type": "string",
+            "title": "System",
+            "description": "Zone system: coggan, british, karvonen, garmin",
+            "default": "coggan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "max_hr"
+        ],
+        "title": "HRZonesRequest"
+      },
+      "HRZonesResponse": {
+        "properties": {
+          "zones": {
+            "items": {
+              "$ref": "#/components/schemas/HRZone"
+            },
+            "type": "array",
+            "title": "Zones"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "max_hr": {
+            "type": "number",
+            "title": "Max Hr"
+          },
+          "resting_hr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resting Hr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "zones",
+          "system",
+          "max_hr",
+          "resting_hr"
+        ],
+        "title": "HRZonesResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HeatRequest": {
+        "properties": {
+          "temperature_c": {
+            "type": "number",
+            "title": "Temperature C",
+            "description": "Air temperature in Celsius"
+          },
+          "humidity_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Humidity Pct",
+            "description": "Relative humidity %",
+            "default": 50
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "description": "Metric to adjust: pace, power",
+            "default": "pace"
+          },
+          "base_value": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Base Value",
+            "description": "Base value (sec/km for pace, watts for power)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temperature_c",
+          "base_value"
+        ],
+        "title": "HeatRequest"
+      },
+      "HeatResponse": {
+        "properties": {
+          "adjusted_value": {
+            "type": "number",
+            "title": "Adjusted Value"
+          },
+          "wbgt_c": {
+            "type": "number",
+            "title": "Wbgt C"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor"
+          },
+          "risk_level": {
+            "type": "string",
+            "title": "Risk Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "adjusted_value",
+          "wbgt_c",
+          "factor",
+          "risk_level"
+        ],
+        "title": "HeatResponse"
+      },
+      "PaceConvertRequest": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Value",
+            "description": "Input value"
+          },
+          "from_unit": {
+            "type": "string",
+            "title": "From Unit",
+            "description": "Source unit: min_per_km, min_per_mi, kmh, mph, sec_per_100m, sec_per_100y"
+          },
+          "to_unit": {
+            "type": "string",
+            "title": "To Unit",
+            "description": "Target unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "from_unit",
+          "to_unit"
+        ],
+        "title": "PaceConvertRequest"
+      },
+      "PaceConvertResponse": {
+        "properties": {
+          "result": {
+            "type": "number",
+            "title": "Result"
+          },
+          "from_unit": {
+            "type": "string",
+            "title": "From Unit"
+          },
+          "to_unit": {
+            "type": "string",
+            "title": "To Unit"
+          },
+          "input_value": {
+            "type": "number",
+            "title": "Input Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result",
+          "from_unit",
+          "to_unit",
+          "input_value"
+        ],
+        "title": "PaceConvertResponse"
+      },
+      "PurdyRequest": {
+        "properties": {
+          "distance_m": {
+            "type": "integer",
+            "minimum": 100.0,
+            "title": "Distance M",
+            "description": "Race distance in meters"
+          },
+          "time_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Time Seconds",
+            "description": "Finish time in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "distance_m",
+          "time_seconds"
+        ],
+        "title": "PurdyRequest"
+      },
+      "PurdyResponse": {
+        "properties": {
+          "points": {
+            "type": "integer",
+            "title": "Points",
+            "description": "Purdy points"
+          },
+          "distance_m": {
+            "type": "integer",
+            "title": "Distance M"
+          },
+          "time_seconds": {
+            "type": "number",
+            "title": "Time Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points",
+          "distance_m",
+          "time_seconds"
+        ],
+        "title": "PurdyResponse"
+      },
+      "RiegelRequest": {
+        "properties": {
+          "known_distance_m": {
+            "type": "integer",
+            "minimum": 100.0,
+            "title": "Known Distance M",
+            "description": "Known race distance in meters"
+          },
+          "known_time_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Known Time Sec",
+            "description": "Known race time in seconds"
+          },
+          "target_distance_m": {
+            "type": "integer",
+            "minimum": 100.0,
+            "title": "Target Distance M",
+            "description": "Target distance in meters"
+          },
+          "exponent": {
+            "type": "number",
+            "title": "Exponent",
+            "description": "Riegel exponent (default 1.06)",
+            "default": 1.06
+          }
+        },
+        "type": "object",
+        "required": [
+          "known_distance_m",
+          "known_time_sec",
+          "target_distance_m"
+        ],
+        "title": "RiegelRequest"
+      },
+      "RiegelResponse": {
+        "properties": {
+          "predicted_time_sec": {
+            "type": "number",
+            "title": "Predicted Time Sec"
+          },
+          "known_distance_m": {
+            "type": "integer",
+            "title": "Known Distance M"
+          },
+          "known_time_sec": {
+            "type": "number",
+            "title": "Known Time Sec"
+          },
+          "target_distance_m": {
+            "type": "integer",
+            "title": "Target Distance M"
+          },
+          "exponent": {
+            "type": "number",
+            "title": "Exponent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "predicted_time_sec",
+          "known_distance_m",
+          "known_time_sec",
+          "target_distance_m",
+          "exponent"
+        ],
+        "title": "RiegelResponse"
+      },
+      "SwimCSSRequest": {
+        "properties": {
+          "time_400_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Time 400 Sec",
+            "description": "400m/yd time trial (seconds)"
+          },
+          "time_200_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Time 200 Sec",
+            "description": "200m/yd time trial (seconds)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_400_sec",
+          "time_200_sec"
+        ],
+        "title": "SwimCSSRequest"
+      },
+      "SwimCSSResponse": {
+        "properties": {
+          "css_sec_per_100": {
+            "type": "number",
+            "title": "Css Sec Per 100",
+            "description": "Critical Swim Speed (sec/100m)"
+          },
+          "css_pace_100": {
+            "type": "string",
+            "title": "Css Pace 100",
+            "description": "CSS as MM:SS per 100m"
+          },
+          "threshold_pace_sec": {
+            "type": "number",
+            "title": "Threshold Pace Sec",
+            "description": "Anaerobic threshold pace (sec/100m)"
+          },
+          "anaerobic_reserve": {
+            "type": "number",
+            "title": "Anaerobic Reserve",
+            "description": "Difference between 200 and 400 pace (sec/100m)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "css_sec_per_100",
+          "css_pace_100",
+          "threshold_pace_sec",
+          "anaerobic_reserve"
+        ],
+        "title": "SwimCSSResponse"
+      },
+      "TSSRequest": {
+        "properties": {
+          "ftp_watts": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Ftp Watts",
+            "description": "Functional Threshold Power (watts)"
+          },
+          "np_watts": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Np Watts",
+            "description": "Normalized Power for the ride (watts)"
+          },
+          "duration_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Sec",
+            "description": "Ride duration in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ftp_watts",
+          "np_watts",
+          "duration_sec"
+        ],
+        "title": "TSSRequest"
+      },
+      "TSSResponse": {
+        "properties": {
+          "tss": {
+            "type": "number",
+            "title": "Tss"
+          },
+          "if_factor": {
+            "type": "number",
+            "title": "If Factor"
+          },
+          "duration_hours": {
+            "type": "number",
+            "title": "Duration Hours"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tss",
+          "if_factor",
+          "duration_hours"
+        ],
+        "title": "TSSResponse"
+      },
+      "TrimpRequest": {
+        "properties": {
+          "avg_hr": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Avg Hr",
+            "description": "Average heart rate (bpm)"
+          },
+          "max_hr": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Max Hr",
+            "description": "Max heart rate (bpm)"
+          },
+          "resting_hr": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Resting Hr",
+            "description": "Resting heart rate (bpm)"
+          },
+          "duration_min": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Min",
+            "description": "Duration in minutes"
+          },
+          "sex": {
+            "type": "string",
+            "pattern": "^[MF]$",
+            "title": "Sex",
+            "description": "Sex: M or F",
+            "default": "M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "avg_hr",
+          "max_hr",
+          "resting_hr",
+          "duration_min"
+        ],
+        "title": "TrimpRequest"
+      },
+      "TrimpResponse": {
+        "properties": {
+          "trimp": {
+            "type": "number",
+            "title": "Trimp"
+          },
+          "hr_reserve_pct": {
+            "type": "number",
+            "title": "Hr Reserve Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trimp",
+          "hr_reserve_pct"
+        ],
+        "title": "TrimpResponse"
+      },
+      "VDOTRequest": {
+        "properties": {
+          "distance_m": {
+            "type": "integer",
+            "minimum": 100.0,
+            "title": "Distance M",
+            "description": "Race distance in meters"
+          },
+          "time_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Time Seconds",
+            "description": "Finish time in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "distance_m",
+          "time_seconds"
+        ],
+        "title": "VDOTRequest"
+      },
+      "VDOTResponse": {
+        "properties": {
+          "vdot": {
+            "type": "number",
+            "title": "Vdot",
+            "description": "Calculated VDOT score"
+          },
+          "vo2max_est": {
+            "type": "number",
+            "title": "Vo2Max Est",
+            "description": "Estimated VO2max (ml/kg/min)"
+          },
+          "training_paces": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Training Paces",
+            "description": "Training paces (sec/km)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vdot",
+          "vo2max_est",
+          "training_paces"
+        ],
+        "title": "VDOTResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[project]
+name = "endurance-api"
+version = "0.1.0"
+description = "Endurance sports calculations API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = ["pytest", "httpx"]
