@@ -1,7 +1,7 @@
 """Endurance API - Unified calculations for endurance sports."""
 from copy import deepcopy
 import os
-
+from urllib.parse import urlparse
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -10,6 +10,7 @@ from starlette.responses import JSONResponse
 from .routes import age_grade, vdot, cat_ranking, fina_points, critical_power, riegel, purdy, tss, hr_zones, pace_convert, altitude, heat, swim_css, bike_fit
 
 PUBLIC_ORIGIN = os.getenv("PUBLIC_ORIGIN", "https://endurance-tools-kappa.vercel.app")
+PUBLIC_ORIGIN_HOST = urlparse(PUBLIC_ORIGIN).netloc or PUBLIC_ORIGIN.replace("https://", "").replace("http://", "")
 GUIDANCE = """Use this API as a calculation toolbox for endurance sports.
 
 Discovery and invocation guidance:
@@ -68,7 +69,7 @@ async def payment_challenge_middleware(request: Request, call_next):
     route_key = (request.method.upper(), path)
     if route_key in PAID_ENDPOINTS:
         headers = {
-            "WWW-Authenticate": f'MPP realm="{PUBLIC_ORIGIN}", currency="USD", method="mpp"'
+            "WWW-Authenticate": f'MPP realm="{PUBLIC_ORIGIN_HOST}", origin="{PUBLIC_ORIGIN}", currency="USD", method="mpp"'
         }
         return JSONResponse(
             status_code=402,
@@ -157,7 +158,7 @@ def custom_openapi():
         for method, operation in path_item.items():
             if not isinstance(operation, dict):
                 continue
-            operation["security"] = [] if (method.upper(), path) not in PAID_ENDPOINTS else operation.get("security", [])
+            operation["security"] = [] if (method.upper(), path) not in PAID_ENDPOINTS else [{"siwx": []}]
             _synthesize_request_body(operation)
             route_key = (method.upper(), path)
             if route_key in PAID_ENDPOINTS:
@@ -165,7 +166,7 @@ def custom_openapi():
                 operation["x-payment-info"] = {
                     "price": {"mode": "fixed", "currency": "USD", "amount": amount},
                     "protocols": [
-                        {"mpp": {"method": "mpp", "intent": f"{method.upper()} {path}", "currency": "USD"}}
+                        {"mpp": {"method": "mpp", "intent": f"{method.upper()} {path}", "currency": "USD", "realm": PUBLIC_ORIGIN_HOST, "origin": PUBLIC_ORIGIN}}
                     ],
                 }
                 operation.setdefault("responses", {})["402"] = {"description": "Payment Required"}
