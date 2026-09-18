@@ -11,9 +11,9 @@ PNG_PATH = Path(__file__).resolve().parents[1] / 'public' / 'favicon.png'
 
 @router.get('/favicon.ico', include_in_schema=False)
 def favicon_ico():
-    return FileResponse(FAVICON_PATH, media_type='image/x-icon')
+    return FileResponse(FAVICON_PATH, media_type='image/x-icon', filename='favicon.ico')
 
 
 @router.get('/favicon.png', include_in_schema=False)
 def favicon_png():
-    return FileResponse(PNG_PATH, media_type='image/png')
+    return FileResponse(PNG_PATH, media_type='image/png', filename='favicon.png')
