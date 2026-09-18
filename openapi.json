@@ -7,7 +7,7 @@
     "contact": {
       "email": "justinkwarren@gmail.com"
     },
-    "x-guidance": "Use this API as a calculation toolbox for endurance sports.\n\nDiscovery and invocation guidance:\n- Treat `/openapi.json` as the canonical discovery contract.\n- Prefer JSON request bodies when an operation exposes one.\n- For query-style helper endpoints, use the documented query parameters; the OpenAPI spec mirrors those inputs in a JSON schema for discovery.\n- Routes are public and intentionally open unless a security scheme is explicitly attached.\n- The API is organized by sport and calculation type: running, cycling, swimming, triathlon, and general pacing/conditioning utilities.\n- Endpoints return deterministic math or table lookups, so they are safe to call repeatedly with the same inputs.\n"
+    "x-guidance": "Use this API as a calculation toolbox for endurance sports.\n\nDiscovery and invocation guidance:\n- Treat `/openapi.json` as the canonical discovery contract.\n- Free reference routes are intentionally open and declared with `security: []`.\n- Paid calculators challenge with HTTP 402 and `WWW-Authenticate` before body/query validation runs.\n- Prefer JSON request bodies when an operation exposes one.\n- For query-style helper endpoints, use the documented query parameters; the OpenAPI spec mirrors those inputs in a JSON schema for discovery.\n- The API is organized by sport and calculation type: running, cycling, swimming, triathlon, and general pacing/conditioning utilities.\n- Endpoints return deterministic math or table lookups, so they are safe to call repeatedly with the same inputs.\n"
   },
   "paths": {
     "/age-grade/calculate": {
@@ -48,9 +48,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /age-grade/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/age-grade/factors": {
@@ -156,9 +175,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /vdot/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/vdot/paces": {
@@ -331,9 +369,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /cat-ranking/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/cat-ranking/thresholds": {
@@ -455,9 +512,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /fina/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/fina/base-times": {
@@ -583,9 +659,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /critical-power/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/critical-power/predict": {
@@ -722,9 +817,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /riegel/predict",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/riegel/common": {
@@ -856,9 +970,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /purdy/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/tss/tss": {
@@ -899,9 +1032,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /tss/tss",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/tss/trimp": {
@@ -942,9 +1094,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /tss/trimp",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/hr-zones/calculate": {
@@ -985,9 +1156,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /hr-zones/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/hr-zones/systems": {
@@ -1048,9 +1238,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /pace/convert",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/pace/swim-convert": {
@@ -1187,9 +1396,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /altitude/adjust",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/altitude/acclimation": {
@@ -1294,9 +1522,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /heat/adjust",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/heat/guidelines": {
@@ -1357,9 +1604,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /swim-css/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/swim-css/training-zones": {
@@ -1464,9 +1730,28 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         },
-        "security": []
+        "security": [],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.05"
+          },
+          "protocols": [
+            {
+              "mpp": {
+                "method": "mpp",
+                "intent": "POST /bike-fit/calculate",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
       }
     },
     "/bike-fit/crank-length": {

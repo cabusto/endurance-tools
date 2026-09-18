@@ -1,22 +1,44 @@
 """Endurance API - Unified calculations for endurance sports."""
 from copy import deepcopy
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from starlette.responses import JSONResponse
 
 from .routes import age_grade, vdot, cat_ranking, fina_points, critical_power, riegel, purdy, tss, hr_zones, pace_convert, altitude, heat, swim_css, bike_fit
 
+PUBLIC_ORIGIN = os.getenv("PUBLIC_ORIGIN", "https://endurance-tools-kappa.vercel.app")
 GUIDANCE = """Use this API as a calculation toolbox for endurance sports.
 
 Discovery and invocation guidance:
 - Treat `/openapi.json` as the canonical discovery contract.
+- Free reference routes are intentionally open and declared with `security: []`.
+- Paid calculators challenge with HTTP 402 and `WWW-Authenticate` before body/query validation runs.
 - Prefer JSON request bodies when an operation exposes one.
 - For query-style helper endpoints, use the documented query parameters; the OpenAPI spec mirrors those inputs in a JSON schema for discovery.
-- Routes are public and intentionally open unless a security scheme is explicitly attached.
 - The API is organized by sport and calculation type: running, cycling, swimming, triathlon, and general pacing/conditioning utilities.
 - Endpoints return deterministic math or table lookups, so they are safe to call repeatedly with the same inputs.
 """
+
+PAID_ENDPOINTS = {
+    ("POST", "/age-grade/calculate"): 0.05,
+    ("POST", "/vdot/calculate"): 0.05,
+    ("POST", "/cat-ranking/calculate"): 0.05,
+    ("POST", "/fina/calculate"): 0.05,
+    ("POST", "/critical-power/calculate"): 0.05,
+    ("POST", "/riegel/predict"): 0.05,
+    ("POST", "/purdy/calculate"): 0.05,
+    ("POST", "/tss/tss"): 0.05,
+    ("POST", "/tss/trimp"): 0.05,
+    ("POST", "/hr-zones/calculate"): 0.05,
+    ("POST", "/pace/convert"): 0.05,
+    ("POST", "/altitude/adjust"): 0.05,
+    ("POST", "/heat/adjust"): 0.05,
+    ("POST", "/swim-css/calculate"): 0.05,
+    ("POST", "/bike-fit/calculate"): 0.05,
+}
 
 app = FastAPI(
     title="Endurance API",
@@ -33,6 +55,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+PAYMENT_ENFORCEMENT = os.getenv("ENFORCE_PAYMENTS", os.getenv("VERCEL") == "1")
+
+
+@app.middleware("http")
+async def payment_challenge_middleware(request: Request, call_next):
+    if not PAYMENT_ENFORCEMENT:
+        return await call_next(request)
+
+    path = request.url.path.rstrip("/") or "/"
+    route_key = (request.method.upper(), path)
+    if route_key in PAID_ENDPOINTS:
+        headers = {
+            "WWW-Authenticate": f'MPP realm="{PUBLIC_ORIGIN}", currency="USD", method="mpp"'
+        }
+        return JSONResponse(
+            status_code=402,
+            content={
+                "detail": "Payment Required",
+                "price": {"mode": "fixed", "currency": "USD", "amount": f"{PAID_ENDPOINTS[route_key]:.2f}"},
+            },
+            headers=headers,
+        )
+    return await call_next(request)
+
 
 app.include_router(age_grade.router, prefix="/age-grade", tags=["Age Grading"])
 app.include_router(vdot.router, prefix="/vdot", tags=["VDOT"])
@@ -106,12 +153,22 @@ def custom_openapi():
         "description": "Identity-only SIWX bearer token.",
     }
 
-    for path_item in schema.get("paths", {}).values():
-        for operation in path_item.values():
+    for path, path_item in schema.get("paths", {}).items():
+        for method, operation in path_item.items():
             if not isinstance(operation, dict):
                 continue
-            operation["security"] = []
+            operation["security"] = [] if (method.upper(), path) not in PAID_ENDPOINTS else operation.get("security", [])
             _synthesize_request_body(operation)
+            route_key = (method.upper(), path)
+            if route_key in PAID_ENDPOINTS:
+                amount = f"{PAID_ENDPOINTS[route_key]:.2f}"
+                operation["x-payment-info"] = {
+                    "price": {"mode": "fixed", "currency": "USD", "amount": amount},
+                    "protocols": [
+                        {"mpp": {"method": "mpp", "intent": f"{method.upper()} {path}", "currency": "USD"}}
+                    ],
+                }
+                operation.setdefault("responses", {})["402"] = {"description": "Payment Required"}
 
     app.openapi_schema = schema
     return app.openapi_schema
