@@ -1,10 +1,17 @@
 """Endurance API - Unified calculations for endurance sports."""
 from copy import deepcopy
+import asyncio
+import hashlib
+import json
 import os
 from urllib.parse import urlparse
+from urllib.request import Request as UrlRequest, urlopen
+from uuid import uuid4
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse
 
 from .routes import age_grade, vdot, cat_ranking, fina_points, critical_power, riegel, purdy, tss, hr_zones, pace_convert, altitude, heat, swim_css, bike_fit
@@ -59,28 +66,113 @@ app.add_middleware(
 )
 
 PAYMENT_ENFORCEMENT = os.getenv("ENFORCE_PAYMENTS", os.getenv("VERCEL") == "1")
+POSTHOG_ENABLED = bool(os.getenv("POSTHOG_API_KEY"))
+POSTHOG_API_KEY = os.getenv("POSTHOG_API_KEY", "")
+POSTHOG_HOST = os.getenv("POSTHOG_HOST", "https://us.i.posthog.com")
+POSTHOG_SALT = os.getenv("POSTHOG_SALT", "endurance-api")
+
+
+def _anon_distinct_id(request: Request) -> str:
+    seed = f"{request.headers.get('user-agent','')[:128]}|{request.client.host if request.client else ''}|{POSTHOG_SALT}"
+    return hashlib.sha256(seed.encode()).hexdigest()[:32]
+
+
+def _posthog_capture(event: str, properties: dict, distinct_id: str) -> None:
+    if not POSTHOG_ENABLED:
+        return
+    payload = json.dumps({
+        "api_key": POSTHOG_API_KEY,
+        "event": event,
+        "distinct_id": distinct_id,
+        "properties": properties,
+    }).encode()
+    req = UrlRequest(
+        f"{POSTHOG_HOST.rstrip('/')}/capture/",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=4) as resp:
+            resp.read(1)
+    except Exception:
+        pass
 
 
 @app.middleware("http")
-async def payment_challenge_middleware(request: Request, call_next):
-    if not PAYMENT_ENFORCEMENT:
-        return await call_next(request)
-
+async def observability_middleware(request: Request, call_next):
+    started = asyncio.get_running_loop().time()
     path = request.url.path.rstrip("/") or "/"
     route_key = (request.method.upper(), path)
-    if route_key in PAID_ENDPOINTS:
+    paid = route_key in PAID_ENDPOINTS
+    distinct_id = _anon_distinct_id(request)
+    request_id = uuid4().hex
+
+    if PAYMENT_ENFORCEMENT and paid:
         headers = {
             "WWW-Authenticate": f'MPP realm="{PUBLIC_ORIGIN_HOST}", origin="{PUBLIC_ORIGIN}", currency="USD", method="mpp"'
         }
-        return JSONResponse(
-            status_code=402,
-            content={
-                "detail": "Payment Required",
-                "price": {"mode": "fixed", "currency": "USD", "amount": f"{PAID_ENDPOINTS[route_key]:.2f}"},
+        amount = PAID_ENDPOINTS[route_key]
+        body = {
+            "detail": "Payment Required",
+            "price": {"mode": "fixed", "currency": "USD", "amount": f"{amount:.2f}"},
+            "request_id": request_id,
+        }
+        response = JSONResponse(status_code=402, content=body, headers=headers)
+        elapsed_ms = round((asyncio.get_running_loop().time() - started) * 1000, 1)
+        if POSTHOG_ENABLED:
+            response.background = BackgroundTask(
+                _posthog_capture,
+                "payment_challenge_issued",
+                {
+                    "route": path,
+                    "method": request.method.upper(),
+                    "amount": amount,
+                    "currency": "USD",
+                    "protocol": "mpp",
+                    "status": 402,
+                    "latency_ms": elapsed_ms,
+                    "origin_host": PUBLIC_ORIGIN_HOST,
+                    "request_id": request_id,
+                },
+                distinct_id,
+            )
+        return response
+
+    response = await call_next(request)
+    elapsed_ms = round((asyncio.get_running_loop().time() - started) * 1000, 1)
+    if POSTHOG_ENABLED and request.url.path not in {"/openapi.json", "/docs", "/redoc"}:
+        response.background = BackgroundTask(
+            _posthog_capture,
+            "api_request",
+            {
+                "route": path,
+                "method": request.method.upper(),
+                "status": response.status_code,
+                "latency_ms": elapsed_ms,
+                "paid": paid,
+                "origin_host": PUBLIC_ORIGIN_HOST,
+                "request_id": request_id,
             },
-            headers=headers,
+            distinct_id,
         )
-    return await call_next(request)
+        if response.status_code == 200 and paid:
+            response.background = BackgroundTask(
+                _posthog_capture,
+                "payment_succeeded",
+                {
+                    "route": path,
+                    "method": request.method.upper(),
+                    "status": response.status_code,
+                    "latency_ms": elapsed_ms,
+                    "amount": PAID_ENDPOINTS[route_key],
+                    "currency": "USD",
+                    "origin_host": PUBLIC_ORIGIN_HOST,
+                    "request_id": request_id,
+                },
+                distinct_id,
+            )
+    return response
 
 
 app.include_router(age_grade.router, prefix="/age-grade", tags=["Age Grading"])
